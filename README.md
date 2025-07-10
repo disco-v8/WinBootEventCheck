@@ -93,7 +93,7 @@ src/
 
 ## 技術仕様
 
-- **言語**: Rust 2024 Edition
+- **言語**: Rust 2021 Edition
 - **依存関係**:
   - `chrono` 0.4 - 日時処理
   - `regex` 1.0 - 正規表現
@@ -159,5 +159,5 @@ cargo test
 
 ## お問い合わせ
 
-- GitHub Issues: [Issues](https://github.com/yourusername/WinBootEventCheck/issues)
-- Email: your.email@example.com
+- GitHub Issues: [Issues](https://github.com/disco-v8/WinBootEventCheck/issues)
+- GitHub Repository: https://github.com/disco-v8/WinBootEventCheck
