@@ -1,0 +1,16 @@
+[package]
+name = "win-boot-event-check"
+version = "0.1.0"
+edition = "2021"
+authors = ["disco-v8"]
+description = "Windowsイベントログ解析ツール - セキュリティログからプロセス生成・ログオンイベント等を抽出・整形出力"
+readme = "README.md"
+repository = "https://github.com/disco-v8/WinBootEventCheck"
+license = "MIT"
+keywords = ["windows", "eventlog", "security", "analysis", "forensics"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+chrono = "0.4"
+regex = "1"
+quick-xml = "0.31"

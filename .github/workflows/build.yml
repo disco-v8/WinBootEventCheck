@@ -1,0 +1,109 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache cargo index
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/git
+        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache cargo build
+      uses: actions/cache@v3
+      with:
+        path: target
+        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build
+      run: cargo build --verbose --release
+
+    - name: Run tests
+      run: cargo test --verbose
+      continue-on-error: true  # テストは管理者権限が必要なため、CIでは失敗する可能性があります
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: win-boot-event-check-windows
+        path: target/release/win-boot-event-check.exe
+
+  release:
+    needs: build
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+
+    - name: Build release
+      run: cargo build --release
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          ## WinBootEventCheck ${{ github.ref }}
+          
+          Windowsイベントログ解析ツールの新しいリリースです。
+          
+          ### インストール方法
+          1. `win-boot-event-check.exe`をダウンロード
+          2. 管理者権限でコマンドプロンプト/PowerShellを起動
+          3. 実行ファイルのあるフォルダで実行
+          
+          ### 使用方法
+          ```
+          .\win-boot-event-check.exe       # 基本実行
+          .\win-boot-event-check.exe -s1   # svchost除外リスト方式
+          .\win-boot-event-check.exe -s2   # svchost全除外
+          ```
+          
+          詳細は[README.md](https://github.com/${{ github.repository }}/blob/main/README.md)を参照してください。
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: target/release/win-boot-event-check.exe
+        asset_name: win-boot-event-check.exe
+        asset_content_type: application/octet-stream
